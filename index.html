@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>NetCDF Scale and Offset Calculator</title>
+  <script src="netcdf-calculator.js"></script>
+  <style>
+    body { font-family: sans-serif; line-height: 1.25; }
+    body > div { margin: 0 auto; max-width: 1000px; }
+    input { font-size: 0.9em; text-align: center; }
+    input[type="checkbox"] { vertical-align: bottom; }
+    p input { margin-bottom: 5px; }
+    code, pre { font-family: monospace; font-size: 1.1em; background-color: #EEE; padding: 1pt 2pt; }
+    pre { margin: 0; padding: 6pt; }
+    table { border-collapse: collapse; text-align: center; margin: 5pt 0 20pt 0; }
+    tr.highlight { background-color: #EEE; font-weight: bold; }
+    tr:first-child { background-color: #333; color: #FFF; }
+    td, th { min-width: 150px; width: 220px; padding: 5px 10px; border: 1px solid #CCC; }
+    td:first-child, th:first-child { width: 150px; }
+    th { font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div>
+  <h1>NetCDF Scale and Offset Calculator</h1>
+  
+  <p>
+    NetCDF allows simple and effective packing of floating point numbers in smaller integer types based on the formula
+  </p>
+  <pre>value_unpacked = scale_factor * value_packed + add_offset</pre>
+  <p>
+    where the scale factor and offset are floating point values.
+    Such packing reduces the precision of the data, but for many applications this is acceptable given the significantly smaller files.
+    See also:
+  </p>
+  <ul>
+    <li><a href="https://www.unidata.ucar.edu/software/netcdf/documentation/NUG/best_practices.html#bp_Packed-Data-Values">NetCDF User's Guide: Best Practices</a></li>
+    <li><a href="http://james.hiebert.name/blog/work/2015/04/18/NetCDF-Scale-Factors.html">NetCDF's scale factors (and add offsets) explained</a></li>
+  </ul>
+  
+  <p>
+    Enter the required value range or set values of scale and offset and click "calculate" to fill the table below:
+  </p>
+  <p>
+    <input type="button" value="calculate" id="calculate-range"> for value range <input type="text" size="10" value="0.0" id="input-min"> to <input type="text" size="10" value="1.0" id="input-max"> or
+    <br>
+    <input type="button" value="calculate" id="calculate-param"> for scale <input type="text" size="10" value="1.0" id="input-scale"> and offset <input type="text" size="10" value="0.0" id="input-offset">.
+  </p>
+  
+  <table>
+    <tr>
+      <th>Type</th>
+      <th>int8</th>
+      <th>int16</th>
+      <th>int32</th>
+    </tr>
+    <tr>
+      <td>Values</td>
+      <td>2<sup>8</sup> = 256</th>
+      <td>2<sup>16</sup> = 65536</th>
+      <td>2<sup>32</sup> = 4294967296</th>
+    </tr>
+    <tr class="highlight">
+      <td>Scale</td>
+      <td id="int8-scale"></td>
+      <td id="int16-scale"></td>
+      <td id="int32-scale"></td>
+    </tr>
+    <tr class="highlight">
+      <td>Offset</td>
+      <td id="int8-offset"></td>
+      <td id="int16-offset"></td>
+      <td id="int32-offset"></td>
+    </tr>
+    <tr class="highlight" title="Fill value to signify NaN/missing data. If selected, the most negative integer is used.">
+      <td><label><input type="checkbox" checked id="input-fill">Fill</label></td>
+      <td id="int8-fill"></td>
+      <td id="int16-fill"></td>
+      <td id="int32-fill"></td>
+    </tr>
+    <tr>
+      <td>Min</td>
+      <td id="int8-min"></td>
+      <td id="int16-min"></td>
+      <td id="int32-min"></td>
+    </tr>
+    <tr>
+      <td>·</td>
+      <td id="int8-minp"></td>
+      <td id="int16-minp"></td>
+      <td id="int32-minp"></td>
+    </tr>
+    <tr>
+      <td>·</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <td>·</td>
+      <td id="int8-midm"></td>
+      <td id="int16-midm"></td>
+      <td id="int32-midm"></td>
+    </tr>
+    <tr>
+      <td>Mid</td>
+      <td id="int8-mid"></td>
+      <td id="int16-mid"></td>
+      <td id="int32-mid"></td>
+    </tr>
+    <tr>
+      <td>·</td>
+      <td id="int8-midp"></td>
+      <td id="int16-midp"></td>
+      <td id="int32-midp"></td>
+    </tr>
+    <tr>
+      <td>·</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <td>·</td>
+      <td id="int8-maxm"></td>
+      <td id="int16-maxm"></td>
+      <td id="int32-maxm"></td>
+    </tr>
+    <tr>
+      <td>Max</td>
+      <td id="int8-max"></td>
+      <td id="int16-max"></td>
+      <td id="int32-max"></td>
+    </tr>
+  </table>
+  
+  <p>
+    The corresponding <a href="https://xarray.pydata.org/en/stable/io.html#scaling-and-type-conversions">encoding</a> settings for xarray's <a href="https://xarray.pydata.org/en/stable/generated/xarray.Dataset.to_netcdf.html">to_netcdf</a>:
+  </p>
+  <pre id="xarray-int8">dict()</pre>
+  <pre id="xarray-int16">dict()</pre>
+  <pre id="xarray-int32">dict()</pre>
+  <p>
+    Compression can additionally applied to further reduce the size of the output file.
+  </p>
+</div>
+
+</body>
+</html>
+
